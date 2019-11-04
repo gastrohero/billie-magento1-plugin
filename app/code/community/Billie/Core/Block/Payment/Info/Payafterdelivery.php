@@ -32,8 +32,11 @@ class Billie_Core_Block_Payment_Info_Payafterdelivery extends Mage_Payment_Block
         if ($this->getInfo()->getBillieDuration()) {
             $data[Mage::helper('billie_core')->__('Duration')] = $this->getDuration();
         }
-        if ($this->getInfo()->getBillieViban()) {
-            $data[Mage::helper('billie_core')->__('Usage')] = $this->getInfo()->getOrder()->getIncrementId();
+        if($this->getInfo()->getOrder()){
+            $invoiceIncrementId = $this->getInvoiceIncrementId($this->getInfo()->getOrder());
+            if ($this->getInfo()->getBillieViban() && $invoiceIncrementId) {
+                $data[Mage::helper('billie_core')->__('Usage')] = $invoiceIncrementId;
+            }
         }
         if ($this->getInfo()->getBillieRegistrationNumber() && !$this->isAdmin()) {
             $data[Mage::helper('billie_core')->__('Registration Number')] = $this->getInfo()->getBillieRegistrationNumber();
@@ -63,7 +66,7 @@ class Billie_Core_Block_Payment_Info_Payafterdelivery extends Mage_Payment_Block
     protected function getStoreName()
     {
 
-        return Mage::getStoreConfig('general/store_information/name', $this->getStoreId());
+        return Mage::getStoreConfig('general/imprint/company_first', $this->getStoreId());
     }
 
     protected function getStoreId()
@@ -94,6 +97,20 @@ class Billie_Core_Block_Payment_Info_Payafterdelivery extends Mage_Payment_Block
         }
 
         return $duration;
+
+    }
+
+    protected function getInvoiceIncrementId($order){
+
+        $invoiceIncrementId = '';
+
+        $invoiceCollection = $order->getInvoiceCollection();
+        if(count($invoiceCollection) > 0){
+            $invoice = $order->getInvoiceCollection()->getFirstItem();
+            $invoiceIncrementId = $invoice->getIncrementId();
+        }
+
+        return $invoiceIncrementId;
 
     }
 
